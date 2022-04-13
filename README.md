@@ -1,0 +1,1 @@
+# Code and data for "Dynamic mode decomposition of transcriptome dynamics and optimal sensor placement for discovery of genetic reporters".
