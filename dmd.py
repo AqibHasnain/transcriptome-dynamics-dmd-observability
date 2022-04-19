@@ -94,7 +94,7 @@ def dmd(data,rank_reduce=True,r=None,trim=False,trimThresh=1.5e-3):
     b_r0 = np.linalg.inv(np.dot(W,np.diag(L))) @ data_red[:,:,0]
     b_r1 = np.linalg.inv(np.dot(W,np.diag(L))) @ data_red[:,:,1]
 
-    return A, Atilde, cd_red, L, W, Phi, b_r0, b_r1
+    return A, Atilde, data_red, cd_red, L, W, Phi, b_r0, b_r1
 
 
 

@@ -28,8 +28,8 @@ def energy_maximization_with_uni_dist(X,A,ntimepts,Tf,IC=0):
         At.append(np.linalg.matrix_power(A,i))
     x0 = X[:,0,:]
     # get the min and max of each gene's IC
-    x0min = np.min(X[:,0,:],axis=1)
-    x0max = np.max(X[:,0,:],axis=1)
+    x0min = np.min(x0,axis=1) # x0min = np.min(X[:,0,:],axis=1)
+    x0max = np.max(x0,axis=1) # x0max = np.max(X[:,0,:],axis=1)
     # form a set of IC's distributed uniformly
     numICs = X.shape[0]
     x0uni = np.zeros((len(x0min),numICs))

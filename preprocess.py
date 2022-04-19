@@ -64,7 +64,7 @@ def recover_negatives(data):
 	data[data < 0.0] = 0.0
 	return data
 
-def get_high_exp_genes(data_c, data_t,mean_cutoff=200):
+def get_high_exp_genes(data_c, data_t,mean_cutoff=200): 
 	mean_c_bool = np.mean(np.mean(data_c,axis=2),axis=1) > mean_cutoff
 	mean_t_bool = np.mean(np.mean(data_t,axis=2),axis=1) > mean_cutoff
 	keepers_c_high = [ii for ii, val in enumerate(mean_c_bool) if val]
