@@ -102,4 +102,53 @@ def reconstruct_x0(data_fc_norm,nT,A,C,CsortedInds,samplingFreq=5,order='top'):
         rho2 = stats.pearsonr(data_fc_norm[:,0,1],np.squeeze(x0_est_r2))[0]
         rho.append((rho1 + rho2)/2)
         
-    return rho    
+    return rho
+
+def gram_matrix(A,x0,nT=50,reduced=True,projection_matrix=np.array([])):
+
+    '''
+    A: matrix representation of the Koopman operator
+    x0: initial conditions from measurements
+    nT: number of timepoints over which to compute the Gram matrix
+    reduced: if True, will compute reduced G from reduced data and KO and will also return full G after inverse projection
+    projection_matrix: the matrix used to data and KO to low-dimensional space (first r eigenvectors of Data.T @ Data)
+    Both A and x0 can be either the full dimensional data and KO or they can be the DMD projected data and KO
+    If projected, then return both the projected G and the full G after inverting the projection
+    If not projected, then compute full G (can be slow, especially if the data dimension exceeds a couple thousand)
+    Furthermore, for sensor placement we need to compute the eigendecomposition of G, so having the reduced G is handy   
+    '''
+
+    # generate artificial initial conditions for robust optimization 
+    # get the min and max of each gene's initial value
+    x0min = np.min(x0,axis=1)
+    x0max = np.max(x0,axis=1)
+    # form a set of new initial conditions distributed uniformly from x0min to x0max
+    numICs = x0.shape[0]
+    x0uni = np.zeros((len(x0min),numICs))
+    x0uni[:,0:x0.shape[1]] = deepcopy(x0)
+    for ii in range(x0.shape[1],x0uni.shape[1]):
+        x0tmp = np.random.uniform(x0min,x0max)
+        x0uni[:,ii] = x0tmp
+    G = np.zeros_like(A)
+    for ii in range(nT):
+        A_pow = np.linalg.matrix_power(A,ii)
+        G += np.matmul( np.matmul(A_pow, x0uni), np.matmul(x0uni.T, A_pow.T) ) 
+    # right eigenvectors of G (columns of V) are rows of the gene sampling matrix (or vector if just one eigvec kept)
+
+    if reduced: 
+        Gfull = np.matmul(np.matmul(projection_matrix, G), projection_matrix.T)
+        return G, Gfull
+    else: 
+        return G # this is the full G, computed directly from full KO and data
+
+
+
+
+
+
+
+
+
+
+
+
