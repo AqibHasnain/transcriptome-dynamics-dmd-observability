@@ -3,6 +3,7 @@ from scipy.optimize import minimize
 from scipy import stats 
 import time
 from copy import deepcopy
+import random
 
 def objective_manyIC(x,At,x0):
     '''
