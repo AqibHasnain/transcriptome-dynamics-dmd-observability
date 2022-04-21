@@ -78,6 +78,8 @@ def dmd(data,rank_reduce=True,r=None,trim=False,trimThresh=1.5e-3):
     data_red[:,:,0] = np.dot(U_r.T ,data[:,:,0])
     data_red[:,:,1] = np.dot(U_r.T ,data[:,:,1])
     X_pred_red, cd_red = n_step_prediction(Atilde,data_red,data_red.shape[1],data_red.shape[2])
+    _, _ = n_step_prediction(A,data,data.shape[1],data.shape[2])
+
     X_pred_red = X_pred_red.reshape(len(data_red),data_red.shape[1],data_red.shape[2])
     
     # compute eigenvectors and eigenvalues of DMD operator
