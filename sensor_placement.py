@@ -143,7 +143,25 @@ def gram_matrix(A,x0,nT=50,reduced=True,projection_matrix=np.array([])):
         return G # this is the full G, computed directly from full KO and data
 
 
+def finite_horizon_obs_gramian(A,C,nT):
+    '''
+    A: nxn state-transition matrix
+    C: sampling/output matrix (pxn)
+    nT: number of timepoints for which to compute the gramian over
+    returns:
+    Xo: the nxn observability gramian
+    Xo_proj: Projection of Xo on top three eigenvectors 
+    '''
 
+    CtC = np.matmul(C.T,C)
+    Xo = np.zeros_like(A)
+    for ii in range(nT):
+        A_pow = np.linalg.matrix_power(A,ii)
+        Xo += np.matmul(np.matmul(A_pow.T,CtC),A_pow)
+
+    U,s,Vh = np.linalg.svd(Xo)
+    Xo_proj = np.matmul(np.matmul(U[:,0:3].T,Xo),U[:,0:3])
+    return Xo,Xo_proj
 
 
 
