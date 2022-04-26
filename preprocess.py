@@ -88,12 +88,12 @@ def standardize_time_series(data_fc,ntimepts,nreps):
 def process_df(df,sampleLabels,nreps,reps,ntimepts,txIDs,sg_filter=True,standardize=True):
 	data_c, data_t = get_groups_from_df(np.array(df),sampleLabels)
 	data_c_orig, data_t_orig = put_groups_in_3D(data_c,nreps,ntimepts), put_groups_in_3D(data_t,nreps,ntimepts)
-	data_c_orig, data_t_orig = deepcopy(data_c_orig)[:,2:-1,reps], deepcopy(data_t_orig)[:,2:-1,reps]
+	data_c_ds, data_t_ds = deepcopy(data_c_orig)[:,2:-1,reps], deepcopy(data_t_orig)[:,2:-1,reps]
 	if sg_filter: 
-	   data_c_orig, data_t_orig = smooth_time_series(data_c_orig), smooth_time_series(data_t_orig) 
-	   data_c_orig, data_t_orig = recover_negatives(data_c_orig), recover_negatives(data_t_orig)
+	   data_c_ds, data_t_ds = smooth_time_series(data_c_ds), smooth_time_series(data_t_ds) 
+	   data_c_ds, data_t_ds = recover_negatives(data_c_ds), recover_negatives(data_t_ds)
 	# downselect the timepoints not used in this study
-	data_c, data_t = deepcopy(data_c_orig), deepcopy(data_t_orig) 
+	data_c, data_t = deepcopy(data_c_ds), deepcopy(data_t_ds) 
 	keepers = get_high_exp_genes(data_c,data_t)
 	data_c_keep, data_t_keep = data_c[keepers], data_t[keepers]
 	txIDs_keep = [txIDs[x] for x in keepers]
@@ -102,7 +102,7 @@ def process_df(df,sampleLabels,nreps,reps,ntimepts,txIDs,sg_filter=True,standard
 		data_fc_norm = standardize_time_series(data_fc,data_c.shape[1],data_c.shape[2])
 	else: 
 		data_fc_norm = deepcopy(data_fc)
-	return data_c_orig, data_t_orig, data_c, data_t, keepers, data_c_keep, data_t_keep, txIDs_keep, data_fc, data_fc_norm
+	return data_c_orig[:,:-1,reps], data_t_orig[:,:-1,reps], data_c, data_t, keepers, data_c_keep, data_t_keep, txIDs_keep, data_fc, data_fc_norm
 
 # def process_df(df,sampleLabels,nreps,reps,ntimepts,txIDs,sg_filter=True,standardize=True):
 # 	data_c, data_t = get_groups_from_df(np.array(df),sampleLabels)
