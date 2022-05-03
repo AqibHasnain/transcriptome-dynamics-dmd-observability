@@ -4,6 +4,7 @@ from scipy import stats
 import time
 from copy import deepcopy
 import random
+from sklearn.metrics import r2_score
 
 def objective_manyIC(x,At,x0):
     '''
@@ -49,7 +50,7 @@ def energy_maximization_with_uni_dist(X,A,ntimepts,Tf,IC=0):
 
     return C,r
 
-def reconstruct_x0(data_fc_norm,nT,A,C,CsortedInds,samplingFreq=5,order='top'):
+def reconstruct_x0_sequential(data_fc_norm,nT,A,C,CsortedInds,samplingFreq=5,order='top'):
 
     '''
     nT is the number of timepoints for which to generate outputs and reconstruct x0 with.
@@ -89,8 +90,8 @@ def reconstruct_x0(data_fc_norm,nT,A,C,CsortedInds,samplingFreq=5,order='top'):
 #         print('Rank of observability matrix: ',np.linalg.matrix_rank(O_T)) # don't print, too slow
 
         # use the learned dynamics and sampling to generate output over time
-        y_r1 = np.zeros((1,nT)) 
-        y_r2 = np.zeros((1,nT))
+        y_r1 = np.zeros((len(C),nT)) 
+        y_r2 = np.zeros((len(C),nT))
         for ii in range(nT):
             y_r1[:,ii] = C_sensors @ np.linalg.matrix_power(A,ii) @ data_fc_norm[:,0,0]
             y_r2[:,ii] = C_sensors @ np.linalg.matrix_power(A,ii) @ data_fc_norm[:,0,1]
@@ -99,10 +100,38 @@ def reconstruct_x0(data_fc_norm,nT,A,C,CsortedInds,samplingFreq=5,order='top'):
         x0_est_r1 = np.linalg.pinv(O_T) @ y_r1.T
         x0_est_r2 = np.linalg.pinv(O_T) @ y_r2.T
 
-        rho1 = stats.pearsonr(data_fc_norm[:,0,0],np.squeeze(x0_est_r1))[0]
-        rho2 = stats.pearsonr(data_fc_norm[:,0,1],np.squeeze(x0_est_r2))[0]
+        rho1 = r2_score(data_fc_norm[:,0,0],np.squeeze(x0_est_r1))
+        rho2 = r2_score(data_fc_norm[:,0,1],np.squeeze(x0_est_r2))
         rho.append((rho1 + rho2)/2)
         
+    return rho
+
+def reconstruct_x0(data,nT,A,C):
+    '''
+    The matrix C should be of shape (pxn) if the data are shape (nxm) for p measured genes, n total genes, and m samples
+    If p << n, leave only entries of C that correspond to the p genes as nonzero.
+    '''
+    # generate outputs at nT timepoints, check rank of O_T, and estimate IC
+    O_T = np.zeros((len(C)*nT,C.shape[1])) # O_T has dim p*nT x n
+    for ii in range(O_T.shape[0]): # observability matrix
+        O_T[ii] = C @ np.linalg.matrix_power(A,ii)    
+
+    # use the learned dynamics and sampling to generate output over time
+    y_r1 = np.zeros((len(C),nT)) 
+    y_r2 = np.zeros((len(C),nT))
+    for ii in range(nT):
+        y_r1[:,ii] = C @ np.linalg.matrix_power(A,ii) @ data[:,0,0]
+        y_r2[:,ii] = C @ np.linalg.matrix_power(A,ii) @ data[:,0,1]
+
+    # estimate of x0 
+    x0_est_r1 = np.linalg.pinv(O_T) @ y_r1.T
+    x0_est_r2 = np.linalg.pinv(O_T) @ y_r2.T
+
+
+    rho1 = r2_score(data[:,0,0],np.squeeze(x0_est_r1))
+    rho2 = r2_score(data[:,0,1],np.squeeze(x0_est_r2))
+    rho = (rho1 + rho2)/2
+
     return rho
 
 def gram_matrix(A,x0,nT=50,reduced=True,projection_matrix=np.array([])):
