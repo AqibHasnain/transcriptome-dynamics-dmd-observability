@@ -23,7 +23,10 @@ def n_step_prediction(A,X,ntimepts,nreps):
             count += 1
     feature_means = np.mean(X,axis=1).reshape(len(X),1)
     cd = 1 - ((np.linalg.norm(X - X_pred,ord=2)**2)/(np.linalg.norm(X - feature_means,ord=2)**2))   # coeff of determination aka R^2 
-    print(f'Coefficient of determination for n-step prediction is {cd:.3e}')
+    if len(X) < 50: 
+        print(f'r2_score for n-step prediction (reduced): {cd:.3e}')
+    else: 
+        print(f'r2_score for n-step prediction: {cd:.3e}')        
     return X_pred, cd
 
 def trim_weights(A,thresh):
@@ -78,7 +81,7 @@ def dmd(data,rank_reduce=True,r=None,trim=False,trimThresh=1.5e-3):
     data_red[:,:,0] = np.dot(U_r.T ,data[:,:,0])
     data_red[:,:,1] = np.dot(U_r.T ,data[:,:,1])
     X_pred_red, cd_red = n_step_prediction(Atilde,data_red,data_red.shape[1],data_red.shape[2])
-    _, _ = n_step_prediction(A,data,data.shape[1],data.shape[2])
+    _, cd = n_step_prediction(A,data,data.shape[1],data.shape[2])
 
     X_pred_red = X_pred_red.reshape(len(data_red),data_red.shape[1],data_red.shape[2])
     
@@ -96,7 +99,7 @@ def dmd(data,rank_reduce=True,r=None,trim=False,trimThresh=1.5e-3):
     b_r0 = np.linalg.inv(np.dot(W,np.diag(L))) @ data_red[:,:,0]
     b_r1 = np.linalg.inv(np.dot(W,np.diag(L))) @ data_red[:,:,1]
 
-    return A, Atilde, data_red, U_r, cd_red, L, W, Phi, b_r0, b_r1
+    return A, Atilde, data_red, U_r, cd, L, W, Phi, b_r0, b_r1
 
 
 
